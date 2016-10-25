@@ -29,9 +29,9 @@ public class PlayerController : MonoBehaviour
 
     Valve.VR.EVRButtonId grip = Valve.VR.EVRButtonId.k_EButton_Grip;
     Valve.VR.EVRButtonId redButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad;
-    Valve.VR.EVRButtonId spawn = Valve.VR.EVRButtonId.k_EButton_ApplicationMenu;
 
     public bool gripPressed;
+    bool shootPrepared;
 
     public GameObject world;
 
@@ -55,18 +55,35 @@ public class PlayerController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        if(controller.GetPress(redButton))
+        if(controller.GetPressDown(redButton))
+        {
+            float X = controller.GetAxis().x;
+            float Y = controller.GetAxis().y;
+            if (Mathf.Abs(X) > Mathf.Abs(Y))
+            {
+                Y = 0;
+            }
+            else if(Mathf.Abs(Y) > Mathf.Abs(X))
+            {
+                X = 0;
+            }
+            if(Y > 0)
+            {
+                shootPrepared = true;
+            }
+            else if(Y < 0)
+            {
+                GameObject stumbid = Instantiate(Resources.Load("Stumbids"), Vector3.zero, Quaternion.identity) as GameObject;
+            }
+        }
+        if(shootPrepared)
         {
             PrepareShoot();
         }
-        if(controller.GetPressUp(redButton))
+        if(controller.GetPressUp(redButton) && shootPrepared)
         {
             Shoot();
-        }
-
-        if(controller.GetPressDown(spawn))
-        {
-            GameObject stumbid = Instantiate(Resources.Load("Stumbids"), Vector3.zero, Quaternion.identity) as GameObject;
+            shootPrepared = false;
         }
 
 
