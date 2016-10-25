@@ -4,6 +4,8 @@ using System.Collections;
 public class AISheep : MonoBehaviour
 {
     [SerializeField]
+    Color color;
+    [SerializeField]
     float walkSpeed;
     [SerializeField]
     float runSpeed;
@@ -19,17 +21,25 @@ public class AISheep : MonoBehaviour
     float flyingDistance;
 
     float waitTime;
-    float waitingTime;
 
     Vector3 destination;
 
     bool isRunning;
     bool isMoving;
     bool isWaiting;
+    bool isHold;
+
+    GameObject follow;
+
+    public void setHold(bool value, GameObject owner)
+    {
+        isHold = value;
+        follow = owner;
+    }
 
     void Update()
     {
-        if (!isRunning)
+        if (!isRunning && !isHold)
         {
             Vector3 pos = transform.position;
             pos.y = 0;
@@ -45,6 +55,10 @@ public class AISheep : MonoBehaviour
                 StartCoroutine("Waiting");
             }
         }
+        else if(isHold)
+        {
+            transform.position = follow.transform.position;
+        }
     }
 
     void Move()
@@ -57,20 +71,15 @@ public class AISheep : MonoBehaviour
         GetComponent<NavMeshAgent>().speed = walkSpeed;
     }
 
-    IEnumerable Waiting()
+    IEnumerator Waiting()
     {
-        waitingTime = 0.0f;
         waitTime = Random.Range(waitTimeMin, waitTimeMax);
-        while (waitingTime < waitTime)
-        {
-            waitingTime += 1.0f;
-            yield return new WaitForSeconds(1.0f);
-        }
+        yield return new WaitForSeconds(waitTime);
         isWaiting = false;
         Move();
     }
 
-    IEnumerable Flying()
+    IEnumerator Flying()
     {
         GetComponent<NavMeshAgent>().speed = runSpeed;
         GetComponent<NavMeshAgent>().destination = destination;
@@ -80,9 +89,9 @@ public class AISheep : MonoBehaviour
         {
             destination += transform.position;
             GetComponent<NavMeshAgent>().destination = destination;
+            yield return new WaitForEndOfFrame();
         }
         isRunning = false;
-        yield return null;
     }
 
 

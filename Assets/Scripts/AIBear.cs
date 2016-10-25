@@ -4,6 +4,8 @@ using System.Collections;
 public class AIBear : MonoBehaviour
 {
     [SerializeField]
+    Color color;
+    [SerializeField]
     float walkSpeed;
     [SerializeField]
     float runSpeed;
@@ -23,9 +25,7 @@ public class AIBear : MonoBehaviour
     float flyingDistance;
 
     float waitTime;
-    float waitingTime;
     float eatTime;
-    float eatingTime;
 
     bool isEating;
     bool isMoving;
@@ -38,6 +38,7 @@ public class AIBear : MonoBehaviour
 
     void Start()
     {
+        GetComponent<Renderer>().material.color = color;
     }
 
     void Update()
@@ -70,20 +71,15 @@ public class AIBear : MonoBehaviour
         GetComponent<NavMeshAgent>().speed = walkSpeed;
     }
 
-    IEnumerable Waiting()
+    IEnumerator Waiting()
     {
-        waitingTime = 0.0f;
         waitTime = Random.Range(waitTimeMin, waitTimeMax);
-        while(waitingTime < waitTime)
-        {
-            waitingTime += 1.0f;
-            yield return new WaitForSeconds(1.0f);
-        }
+        yield return new WaitForSeconds(waitTime);
         isWaiting = false;
         Move();
     }
 
-    IEnumerable Eating()
+    IEnumerator Eating()
     {
         GetComponent<NavMeshAgent>().speed = runSpeed;
         GetComponent<NavMeshAgent>().destination = target.transform.position;
@@ -92,20 +88,17 @@ public class AIBear : MonoBehaviour
         {
             distance = Vector3.Distance(transform.position, destination);
             GetComponent<NavMeshAgent>().destination = target.transform.position;
+            yield return new WaitForEndOfFrame();
         }
+        Destroy(target.gameObject);
         target = null;
         isEating = true;
-        eatingTime = 0.0f;
         eatTime = Random.Range(eatTimeMin, eatTimeMax);
-        while(eatingTime < eatTime)
-        {
-            eatTime += 1.0f;
-            yield return new WaitForSeconds(1.0f);
-        }
+        yield return new WaitForSeconds(eatTime);
         isEating = false;
     }
-    
-    IEnumerable Flying()
+
+    IEnumerator Flying()
     {
         GetComponent<NavMeshAgent>().speed = runSpeed;
         GetComponent<NavMeshAgent>().destination = destination;
@@ -114,10 +107,11 @@ public class AIBear : MonoBehaviour
         while (distance > distanceMaxDestination)
         {
             distance = Vector3.Distance(transform.position, destination);
+            yield return new WaitForEndOfFrame();
         }
+        destination = transform.position;
         GetComponent<NavMeshAgent>().destination = destination;
         isRunning = false;
-        yield return null;
     }
 
 
@@ -129,7 +123,7 @@ public class AIBear : MonoBehaviour
             destination = transform.position + new Vector3((transform.position.x - collider.transform.position.x) * flyingDistance / temp, transform.position.y, (transform.position.z - collider.transform.position.z) * flyingDistance / temp);
             StartCoroutine("Flying");
         }
-        else
+        else if (!isEating && !isRunning)
         {
             if (collider.tag == "Stumbids" || collider.tag == "Sheep")
             {
