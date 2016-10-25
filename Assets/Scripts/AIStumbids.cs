@@ -11,8 +11,9 @@ public class AIStumbids : MonoBehaviour
     [SerializeField]
     float distanceMaxDestination;
 
-    GameObject destination;
+    bool isMoving;
 
+    GameObject destination;
     GameObject holdingItem;
 
     public void addInteractiblePoint(GameObject value)
@@ -39,23 +40,35 @@ public class AIStumbids : MonoBehaviour
     void Start()
     {
         GetComponent<NavMeshAgent>().speed = walkSpeed;
+        interactiblePoints = new List<GameObject>();
+        GameObject[] interacts = GameObject.FindGameObjectsWithTag("Interactible");
+        foreach(GameObject obj in interacts)
+        {
+            addInteractiblePoint(obj);
+        }
+        Move();
     }
 
     void Update()
     {
-        Vector3 goTo = destination.transform.position;
-        GetComponent<NavMeshAgent>().destination = goTo;
-        float distance = Vector3.Distance(transform.position, goTo);
-        if(distance <= distanceMaxDestination)
+        if(isMoving)
         {
-            GetComponent<NavMeshAgent>().destination = transform.position;
-            StartCoroutine(Interaction());
+            Vector3 goTo = destination.transform.position;
+            GetComponent<NavMeshAgent>().destination = goTo;
+            float distance = Vector3.Distance(transform.position, goTo);
+            if (distance <= distanceMaxDestination)
+            {
+                isMoving = false;
+                GetComponent<NavMeshAgent>().destination = transform.position;
+                StartCoroutine(Interaction());
+            }
         }
     }
 
     void Move()
     {
         destination = interactiblePoints[interactiblePoints.Count - 1];
+        isMoving = true;
     }
 
     IEnumerator Interaction()
