@@ -8,13 +8,13 @@ public class AISheep : MonoBehaviour
     [SerializeField]
     float runSpeed;
     [SerializeField]
-    float distanceMaxWalk;
+    float distanceWalk;
     [SerializeField]
     float distanceMaxDestination;
     [SerializeField]
-    float waitingTimeMin;
+    float waitTimeMin;
     [SerializeField]
-    float waitingTimeMax;
+    float waitTimeMax;
     [SerializeField]
     float flyingDistance;
 
