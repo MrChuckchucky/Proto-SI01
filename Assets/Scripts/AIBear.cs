@@ -43,7 +43,7 @@ public class AIBear : MonoBehaviour
 
     void Update()
     {
-        if(!isRunning)
+        if(!isRunning && !isEating)
         {
             Vector3 pos = transform.position;
             pos.y = 0;
@@ -63,12 +63,15 @@ public class AIBear : MonoBehaviour
 
     void Move()
     {
-        isMoving = true;
-        float randX = Random.Range(0, distanceWalk * 2) - distanceWalk;
-        float randZ = Random.Range(0, distanceWalk * 2) - distanceWalk;
-        destination = new Vector3(transform.position.x + randX, 0, transform.position.z + randZ);
-        GetComponent<NavMeshAgent>().destination = destination;
-        GetComponent<NavMeshAgent>().speed = walkSpeed;
+        if(!isRunning)
+        {
+            isMoving = true;
+            float randX = Random.Range(0, distanceWalk * 2) - distanceWalk;
+            float randZ = Random.Range(0, distanceWalk * 2) - distanceWalk;
+            destination = new Vector3(transform.position.x + randX, 0, transform.position.z + randZ);
+            GetComponent<NavMeshAgent>().destination = destination;
+            GetComponent<NavMeshAgent>().speed = walkSpeed;
+        }
     }
 
     IEnumerator Waiting()
@@ -84,25 +87,29 @@ public class AIBear : MonoBehaviour
         GetComponent<NavMeshAgent>().speed = runSpeed;
         GetComponent<NavMeshAgent>().destination = target.transform.position;
         float distance = distanceMaxDestination + 10.0f;
-        while(distance > distanceMaxDestination)
+        while(distance > distanceMaxDestination && !isRunning)
         {
-            distance = Vector3.Distance(transform.position, destination);
             GetComponent<NavMeshAgent>().destination = target.transform.position;
+            distance = Vector3.Distance(transform.position, destination);
             yield return new WaitForEndOfFrame();
         }
-        Destroy(target.gameObject);
-        target = null;
-        isEating = true;
-        eatTime = Random.Range(eatTimeMin, eatTimeMax);
-        yield return new WaitForSeconds(eatTime);
-        isEating = false;
+        if(!isRunning)
+        {
+            GetComponent<NavMeshAgent>().destination = transform.position;
+            target.GetComponent<NavMeshAgent>().speed = 0;
+            isEating = true;
+            eatTime = Random.Range(eatTimeMin, eatTimeMax);
+            yield return new WaitForSeconds(eatTime);
+            Destroy(target.gameObject);
+            target = null;
+            isEating = false;
+        }
     }
 
     IEnumerator Flying()
     {
         GetComponent<NavMeshAgent>().speed = runSpeed;
         GetComponent<NavMeshAgent>().destination = destination;
-        isRunning = true;
         float distance = distanceMaxDestination + 10.0f;
         while (distance > distanceMaxDestination)
         {
@@ -119,6 +126,7 @@ public class AIBear : MonoBehaviour
     {
         if(collider.tag == "Fire")
         {
+            isRunning = true;
             float temp = Vector3.Distance(transform.position, collider.transform.position);
             destination = transform.position + new Vector3((transform.position.x - collider.transform.position.x) * flyingDistance / temp, transform.position.y, (transform.position.z - collider.transform.position.z) * flyingDistance / temp);
             StartCoroutine("Flying");

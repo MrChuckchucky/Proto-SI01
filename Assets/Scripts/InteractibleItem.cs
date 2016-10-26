@@ -8,6 +8,11 @@ public class InteractibleItem : MonoBehaviour
     [SerializeField]
     bool canBeHeld;
 
+    float waitingTime = 0.0f;
+
+    public enum type { tree, rock, sheep };
+    public type objectType;
+
     public float getInteractionTime()
     {
         return interactionTime;
@@ -19,19 +24,32 @@ public class InteractibleItem : MonoBehaviour
 
     void Start()
     {
-        GameObject[] stumbids = GameObject.FindGameObjectsWithTag("Stumbids");
-        foreach(GameObject s in stumbids)
+        if (this.gameObject.tag == "Bear")
         {
-            s.GetComponent<AIStumbids>().addInteractiblePoint(this.gameObject);
+            waitingTime = 1.0f;
         }
+        StartCoroutine(wait());
     }
 
     void OnDestroy()
     {
-        GameObject[] stumbids = GameObject.FindGameObjectsWithTag("Stumbids");
-        foreach (GameObject s in stumbids)
+        InteractibleManager.instance.removeInteractible(this.gameObject);
+    }
+
+    public void Interaction(GameObject interacter)
+    {
+
+        switch (objectType)
         {
-            s.GetComponent<AIStumbids>().removeInteractiblepoint(this.gameObject);
+            case type.tree:
+                GetComponent<Tree>().GiveBranch(interacter);
+                break;
         }
+    }
+
+    IEnumerator wait()
+    {
+        yield return new WaitForSeconds(waitingTime);
+        InteractibleManager.instance.addInteractible(this.gameObject);
     }
 }

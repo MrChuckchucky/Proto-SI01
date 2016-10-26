@@ -37,6 +37,8 @@ public class PlayerController : MonoBehaviour
 
     bool isGrabbed;
 
+    bool stumbidSpawned;
+
     [SerializeField]
     float worldMoveMult;
 
@@ -73,7 +75,14 @@ public class PlayerController : MonoBehaviour
             }
             else if(Y < 0)
             {
-                GameObject stumbid = Instantiate(Resources.Load("Stumbids"), Vector3.zero, Quaternion.identity) as GameObject;
+                if (!InteractibleManager.instance.stumbidSpwn)
+                {
+                    GameObject stumbid = Instantiate(Resources.Load("Stumbids"), Vector3.zero, Quaternion.identity) as GameObject;
+                    InteractibleManager.instance.stumbidSpwn = true;
+                }
+               
+                
+               
             }
         }
         if(shootPrepared)
@@ -144,9 +153,14 @@ public class PlayerController : MonoBehaviour
         if (Physics.Raycast(charles, out hit))
         {
             point.SetActive(false);
-            if(hit.transform.gameObject.tag != "Ground" && hit.transform.gameObject.tag != "Bear" && hit.transform.gameObject.tag != "Interactible")
+            if(hit.transform.gameObject.tag != "Ground" && hit.transform.gameObject.tag != "Bear")
             {
-                Destroy(hit.transform.gameObject);
+                if(hit.transform.gameObject.GetComponent<ThunderTarget>()!=null)
+                {
+
+                    hit.transform.gameObject.GetComponent<ThunderTarget>().ThunderStrike();
+                }
+              
             }
         }
     }

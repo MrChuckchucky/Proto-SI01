@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class AIStumbids : MonoBehaviour
 {
+    [SerializeField]
     List<GameObject> interactiblePoints;
 
     [SerializeField]
@@ -14,38 +15,22 @@ public class AIStumbids : MonoBehaviour
     bool isMoving;
 
     GameObject destination;
-    GameObject holdingItem;
 
-    public void addInteractiblePoint(GameObject value)
+    public GameObject holdingItem;
+
+    int index;
+
+    public void setInteractiblePoints(List<GameObject> value)
     {
-        interactiblePoints.Add(value);
+        interactiblePoints = value;
         Move();
-    }
-    void removeLastInteractiblePoint()
-    {
-        interactiblePoints.RemoveAt(interactiblePoints.Count - 1);
-    }
-    public void removeInteractiblepoint(GameObject value)
-    {
-        for(int i = 0; i < interactiblePoints.Count; i++)
-        {
-            if(interactiblePoints[i] == value)
-            {
-                interactiblePoints.RemoveAt(i);
-                return;
-            }
-        }
     }
 
     void Start()
     {
-        GetComponent<NavMeshAgent>().speed = walkSpeed;
+        index = 0;
         interactiblePoints = new List<GameObject>();
-        GameObject[] interacts = GameObject.FindGameObjectsWithTag("Interactible");
-        foreach(GameObject obj in interacts)
-        {
-            addInteractiblePoint(obj);
-        }
+        interactiblePoints = InteractibleManager.instance.getInteractibles();
         Move();
     }
 
@@ -55,6 +40,7 @@ public class AIStumbids : MonoBehaviour
         {
             Vector3 goTo = destination.transform.position;
             GetComponent<NavMeshAgent>().destination = goTo;
+            GetComponent<NavMeshAgent>().speed = walkSpeed;
             float distance = Vector3.Distance(transform.position, goTo);
             if (distance <= distanceMaxDestination)
             {
@@ -67,12 +53,17 @@ public class AIStumbids : MonoBehaviour
 
     void Move()
     {
-        destination = interactiblePoints[interactiblePoints.Count - 1];
-        isMoving = true;
+        if(interactiblePoints.Count>0 && index < interactiblePoints.Count)
+        {
+            destination = interactiblePoints[index];
+            isMoving = true;
+        }
+        
     }
 
     IEnumerator Interaction()
     {
+
         float interactionTime = interactiblePoints[interactiblePoints.Count - 1].GetComponent<InteractibleItem>().getInteractionTime();
         yield return new WaitForSeconds(interactionTime);
         if(interactiblePoints[interactiblePoints.Count - 1].GetComponent<InteractibleItem>().getCanBeHeld())
@@ -87,7 +78,10 @@ public class AIStumbids : MonoBehaviour
                 holdingItem.GetComponent<AISheep>().setHold(true, this.gameObject);
             }
         }
-        removeLastInteractiblePoint();
+
+        interactiblePoints[index].GetComponent<InteractibleItem>().Interaction(this.gameObject);
+
+        index++;
         Move();
     }
 }
